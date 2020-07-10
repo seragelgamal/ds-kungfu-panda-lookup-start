@@ -1,7 +1,13 @@
 // Kung Fu Panda Look Up
 
+let characterArray = [];
+createCharacterArray();
+let slideIndex = 0;
+
 // Event Listener
 document.getElementById('search').addEventListener('click', characterSearch);
+document.getElementById('prev').addEventListener('click', previousSlide);
+document.getElementById('next').addEventListener('click', nextSlide);
 
 // Event Function
 function characterSearch() {
@@ -9,27 +15,39 @@ function characterSearch() {
     let name = document.getElementById('input-name').value;
     name = name.toLowerCase();
 
-    // Test Input Variable and update the page
-    if (name == 'po') {
-        displayCharacter('Po', 'Buddy, I am the Dragon Warrior.')
-    } else if (name == 'tigress') {
-        displayCharacter('Tigress', 'That was pretty hardcore!');
-    } else if (name == 'mantis') {
-        displayCharacter('Mantis', 'Fear the bug!');
-    } else if (name == 'monkey') {
-        displayCharacter('Monkey', 'We should hang out!');
-    } else {
+    let characterIndex = getCharacterIndexByName(name);
+    slideIndex = characterIndex;
+    if (characterIndex == -1) {
         displayQuestionMark();
+    } else {
+        displayCharacter(characterArray[characterIndex]);
     }
+
 }
 
-function displayCharacter(name, quote) {
+function previousSlide() {
+    slideIndex--;
+    if (slideIndex == -1) {
+        slideIndex = characterArray.length - 1;
+    }
+    displayCharacter(characterArray[slideIndex]);
+}
+
+function nextSlide() {
+    slideIndex++;
+    if (slideIndex == characterArray.length) {
+        slideIndex = 0;
+    }
+    displayCharacter(characterArray[slideIndex]);
+}
+
+function displayCharacter(characterObject) {
     // Update page to new character info
-    document.getElementById('main-img').src = 'images/' + name.toLowerCase() + '.png';
-    document.getElementById('character-name').innerHTML = name;
-    document.getElementById('quote').innerHTML = quote;
-    document.getElementById('wiki-link').innerHTML = name + ' Wiki';
-    document.getElementById('wiki-link').href = 'https://kungfupanda.fandom.com/wiki/' + name;
+    document.getElementById('main-img').src = 'images/' + characterObject.imgPath;
+    document.getElementById('character-name').innerHTML = characterObject.name;
+    document.getElementById('quote').innerHTML = characterObject.quote;
+    document.getElementById('wiki-link').innerHTML = characterObject.name + ' Wiki';
+    document.getElementById('wiki-link').href = 'https://kungfupanda.fandom.com/wiki/' + characterObject.urlName;
 }
 
 function displayQuestionMark() {
@@ -39,4 +57,34 @@ function displayQuestionMark() {
     document.getElementById('quote').innerHTML = '"Character Not Found"';
     document.getElementById('wiki-link').innerHTML = 'Wiki Home';
     document.getElementById('wiki-link').href = 'https://kungfupanda.fandom.com/wiki/Kung_Fu_Panda_Wiki';
+}
+
+function createCharacterArray() {
+    fetch("character-data.txt")
+        .then((rawData) => rawData.text())
+        .then(processData);
+
+
+}
+
+function processData(data) {
+    let lines = data.split("\r\n");
+    for (let i = 0; i < lines.length; i++) {
+        let lineArray = lines[i].split(';');
+        characterArray.push({
+            name: lineArray[0],
+            quote: lineArray[1],
+            imgPath: lineArray[2],
+            urlName: lineArray[3]
+        });
+    }
+}
+
+function getCharacterIndexByName(name) {
+    for (let i = 0; i < characterArray.length; i++) {
+        if (characterArray[i].name.toLowerCase() == name) {
+            return i;
+        }
+    }
+    return -1;
 }
